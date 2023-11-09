@@ -2,10 +2,10 @@
 
 ## Overview
 
-This project is an extension of the paper by A. Belley et al. [1] and is mostly maintained by Jack Pitcher under the supervision of Dr. Jason Holt at TRIUMF.
-Our main purpose is to calculate nuclear matrix elements (NMEs) of double beta decay events.
+Calculator nuclear matrix elements (NMEs) of double beta decay events.
 Our project combines research into Multi-Fidelity Gaussian Processes [2] and Deep Gaussian Processes [3] to create the Multi-fidelity, multi-output deep Gaussian Process (MMDGP).
-Most of this project is based off of [GPFlow][8]. 
+Most of this project is based off of [GPFlow][8].
+Extension of the paper by A. Belley et al. [1]
 
 The project is set up as follows:
 
@@ -32,7 +32,7 @@ The data is formatted into Tensorflow Tensors to be used by the model. There are
 * X_train is a Tensor of size (num_data * num_tasks * num_fidelities, num_features + 2), where num_features are the number of LECs and num_data is the number of training samples for each fidelity. The extra two columns are used to map the task (operator) and the fidelity that the particular sample is for. For example, suppose we want to calculate 2 operators, or tasks; call them 0 and 1. We want to do this for three different fidelities: 0, 1, and 2. Each sample would then have six entries in the tensor; one for each output, and for each of those, one for each fidelity.
 * Y_train is a Tensor of size (num_data * num_tasks * num_fidelities, num_tasks * num_fidelities + 2). The 2 extra columns serve the exact same purpose as for the training data, and there is one column for each task at each fidelity.
 * X_test is a Tensor of size (num_test_data * num_tasks, num_features + 1). Since testing data is generally only evaluated at the highest fidelity, since we only want to predict the highest quality data, it does not keep track of the fidelity like X_train. However, it still keeps track of the task of each testing sample.
-* Y_test is a data frame and is only used for visualization purposes. 
+* Y_test is a data frame and is only used for visualization purposes.
 
 ## Model Trainers
 
@@ -45,7 +45,7 @@ Model trainers are classes that are used to train models in particular ways, rat
 
     (kernel_0 * (kernel_1 + kernel_2 + kernel_3) + kernel_0) * coreg
 
-    
+
 Where coreg is the coregionalization kernel used for multi outputs. The particular combination of kernels is where MMDGP differs from regular DGP, which does not use a coregionalization kernel.
 * Likelihoods: Which likelihood to use as the underlying assumption of the distribution of the model; Gaussian is standard.
 
@@ -78,3 +78,9 @@ The visualization package is for plotting results. There are currently two metho
 [7]: https://docs.scipy.org/doc/scipy/reference/optimize.html
 
 [8]: https://www.gpflow.org/
+
+## Contributors
+
+* [Jack Pitcher](https://github.com/JackPitcher)
+* [Antoine Belley](https://github.com/antoinebelley)
+* [Jose Munoz](https://github.com/munozariasjm)
