@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 @dataclass
 class IMSRGPreprocessor:
     """This class takes IMSRG data and preprocesses it into the appropriate format for the models"""
+
     file_path: str
     num_train_data: int
     max_fidelity: int
@@ -34,12 +35,14 @@ class IMSRGPreprocessor:
         df = pd.read_csv(self.file_path)
         df = self.clean_df(df)
 
-        indices = np.random.choice(range(df.shape[0]), size=self.num_train_data, replace=False)
+        indices = np.random.choice(
+            range(df.shape[0]), size=self.num_train_data, replace=False
+        )
         test_indices = [i for i in range(df.shape[0]) if i not in indices]
         self.train_indices = indices
         self.test_indices = test_indices
 
-        x = df.iloc[:, 0:self.num_x_cols]
+        x = df.iloc[:, 0 : self.num_x_cols]
         x_train = x.iloc[indices, :]
         x_test = x.iloc[test_indices, :]
 
@@ -73,36 +76,86 @@ class IMSRGPreprocessor:
 
         if self.train_with_lo_fi_testing_data:
             self.X_train = np.vstack(
-                [np.hstack((x, np.ones((x.shape[0], 1)) * i, np.ones((x.shape[0], 1)) * j))
-                 if j < self.max_fidelity - 1 else
-                 np.hstack((x_train, np.ones((x_train.shape[0], 1)) * i, np.ones((x_train.shape[0], 1)) * j))
-                 for j in range(self.max_fidelity) for i in range(self.num_outputs)]
+                [
+                    np.hstack(
+                        (x, np.ones((x.shape[0], 1)) * i, np.ones((x.shape[0], 1)) * j)
+                    )
+                    if j < self.max_fidelity - 1
+                    else np.hstack(
+                        (
+                            x_train,
+                            np.ones((x_train.shape[0], 1)) * i,
+                            np.ones((x_train.shape[0], 1)) * j,
+                        )
+                    )
+                    for j in range(self.max_fidelity)
+                    for i in range(self.num_outputs)
+                ]
             )
 
-            self.Y_train = np.vstack([
-                np.hstack(
-                    (np.reshape(np.array(y[self.tasks[str(j)][i]]), (y.shape[0], 1)), np.ones((y.shape[0], 1)) * i,
-                     np.ones((y.shape[0], 1)) * j)) if j < self.max_fidelity - 1 else
-                np.hstack((np.reshape(np.array(y_train[self.tasks[str(j)][i]]), (y_train.shape[0], 1)),
-                           np.ones((y_train.shape[0], 1)) * i,
-                           np.ones((y_train.shape[0], 1)) * j))
-                for j in range(self.max_fidelity) for i in range(self.num_outputs)
-            ])
+            self.Y_train = np.vstack(
+                [
+                    np.hstack(
+                        (
+                            np.reshape(
+                                np.array(y[self.tasks[str(j)][i]]), (y.shape[0], 1)
+                            ),
+                            np.ones((y.shape[0], 1)) * i,
+                            np.ones((y.shape[0], 1)) * j,
+                        )
+                    )
+                    if j < self.max_fidelity - 1
+                    else np.hstack(
+                        (
+                            np.reshape(
+                                np.array(y_train[self.tasks[str(j)][i]]),
+                                (y_train.shape[0], 1),
+                            ),
+                            np.ones((y_train.shape[0], 1)) * i,
+                            np.ones((y_train.shape[0], 1)) * j,
+                        )
+                    )
+                    for j in range(self.max_fidelity)
+                    for i in range(self.num_outputs)
+                ]
+            )
         else:
             self.X_train = np.vstack(
-                [np.hstack((x_train, np.ones((x_train.shape[0], 1)) * i, np.ones((x_train.shape[0], 1)) * j))
-                 for j in range(self.max_fidelity) for i in range(self.num_outputs)]
+                [
+                    np.hstack(
+                        (
+                            x_train,
+                            np.ones((x_train.shape[0], 1)) * i,
+                            np.ones((x_train.shape[0], 1)) * j,
+                        )
+                    )
+                    for j in range(self.max_fidelity)
+                    for i in range(self.num_outputs)
+                ]
             )
-            self.Y_train = np.vstack([
-                np.hstack((np.reshape(np.array(y_train[self.tasks[str(j)][i]]), (y_train.shape[0], 1)),
-                           np.ones((y_train.shape[0], 1)) * i,
-                           np.ones((y_train.shape[0], 1)) * j))
-                for j in range(self.max_fidelity) for i in range(self.num_outputs)
-            ])
+            self.Y_train = np.vstack(
+                [
+                    np.hstack(
+                        (
+                            np.reshape(
+                                np.array(y_train[self.tasks[str(j)][i]]),
+                                (y_train.shape[0], 1),
+                            ),
+                            np.ones((y_train.shape[0], 1)) * i,
+                            np.ones((y_train.shape[0], 1)) * j,
+                        )
+                    )
+                    for j in range(self.max_fidelity)
+                    for i in range(self.num_outputs)
+                ]
+            )
 
-        self.X_test = np.vstack([
-            np.hstack((x_test, np.ones((x_test.shape[0], 1)) * i)) for i in range(self.num_outputs)
-        ])
+        self.X_test = np.vstack(
+            [
+                np.hstack((x_test, np.ones((x_test.shape[0], 1)) * i))
+                for i in range(self.num_outputs)
+            ]
+        )
 
         self.Y_test = y.iloc[test_indices, :]
 
@@ -134,7 +187,7 @@ class IMSRGPreprocessor:
         :param df: The dataframe to clean
         :return: The cleaned dataframe
         """
-        x_cols = list(df.columns)[1:self.num_x_cols + 1]
+        x_cols = list(df.columns)[1 : self.num_x_cols + 1]
         tasks = np.concatenate([value for value in self.tasks.values()])
         df = df[x_cols + list(tasks)]
         return df.dropna(axis=0)

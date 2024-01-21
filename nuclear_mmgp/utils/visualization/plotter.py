@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from preprocessing.preprocess_imsrg_data import IMSRGPreprocessor
+from nuclear_mmgp.utils.preprocessing.preprocess_imsrg_data import IMSRGPreprocessor
 
 
 class Plotter:
-
     def __init__(self, trainer, preprocessor, X_test, Y_test, Y_train, tasks):
         self.trainer = trainer
         self.X_test = X_test
@@ -31,11 +30,13 @@ class Plotter:
 
         for i, ax in enumerate(axes.flatten()):
             # Computed points as blue dots
-            ax.scatter(xplot[test_indices], self.Y_test[self.tasks[i]], c='b')
+            ax.scatter(xplot[test_indices], self.Y_test[self.tasks[i]], c="b")
             # Plot training data as red dots
-            ax.scatter(xplot[train_indices], self.Y_train[self.tasks[i]], c='r')
+            ax.scatter(xplot[train_indices], self.Y_train[self.tasks[i]], c="r")
             # Shade in confidence
-            ax.errorbar(xplot[test_indices], mean[:, i], yerr=var[:, i], linestyle='none')
+            ax.errorbar(
+                xplot[test_indices], mean[:, i], yerr=var[:, i], linestyle="none"
+            )
             ax.set_ylabel(self.tasks[i], size=20)
             ax.set_xlabel("Samples", size=20)
         plt.savefig(path_to_save)
@@ -54,16 +55,34 @@ class Plotter:
             mu = mean[:, i] * self.y_var[task] + self.y_mean[task]
             std = 2 * np.sqrt(var[:, i]) * self.y_var[task]
 
-            ax.scatter(self.Y_train[task], self.Y_train[task], c='r', label="Training data", zorder=0)
-            ax.errorbar(self.Y_test[task], mu, yerr=std, linestyle='none', marker='o', color='b',
-                         label='Prediction', zorder=1)
-            ax.plot([min_size - 1, max_size + 1], [min_size - 1, max_size + 1], c='k', linestyle=':')
-            ax.set_ylabel(f'{task} (MM-DGP)')
-            ax.set_xlabel(f'{task} (VS-IMSRG)')
+            ax.scatter(
+                self.Y_train[task],
+                self.Y_train[task],
+                c="r",
+                label="Training data",
+                zorder=0,
+            )
+            ax.errorbar(
+                self.Y_test[task],
+                mu,
+                yerr=std,
+                linestyle="none",
+                marker="o",
+                color="b",
+                label="Prediction",
+                zorder=1,
+            )
+            ax.plot(
+                [min_size - 1, max_size + 1],
+                [min_size - 1, max_size + 1],
+                c="k",
+                linestyle=":",
+            )
+            ax.set_ylabel(f"{task} (MM-DGP)")
+            ax.set_xlabel(f"{task} (VS-IMSRG)")
             ax.set_xlim(min_size, max_size)
             ax.set_ylim(min_size, max_size)
-            ax.legend(prop={'size': 4})
+            ax.legend(prop={"size": 4})
 
         plt.savefig(path_to_save)
         print(f"Plot saved to {path_to_save}")
-

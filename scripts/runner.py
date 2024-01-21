@@ -1,5 +1,7 @@
-from model_trainers.multi_fidelity_deep_gp import MultiFidelityDeepGPTrainer as DeepTrainer
-from preprocessing.preprocess_imsrg_data import IMSRGPreprocessor
+from model_trainers.multi_fidelity_deep_gp import (
+    MultiFidelityDeepGPTrainer as DeepTrainer,
+)
+from nuclear_mmgp.utils.preprocessing.preprocess_imsrg_data import IMSRGPreprocessor
 from visualization.plotter import Plotter
 
 import os
@@ -7,22 +9,24 @@ import pandas as pd
 
 
 def preprocess_data(df, split_string):
-    final_df = pd.DataFrame(columns=['sample', 'E_parent', 'E_daughter', 'GT', 'F', 'T'])
-    ret_df = pd.DataFrame(columns=['sample', 'E_parent', 'E_daughter', 'GT', 'F', 'T'])
-    for name, group in df.groupby(['Energy bra']):
+    final_df = pd.DataFrame(
+        columns=["sample", "E_parent", "E_daughter", "GT", "F", "T"]
+    )
+    ret_df = pd.DataFrame(columns=["sample", "E_parent", "E_daughter", "GT", "F", "T"])
+    for name, group in df.groupby(["Energy bra"]):
         operators = {}
         for i, row in group.iterrows():
-            op_file_split = row['op_file'].split(split_string)
-            sample = op_file_split[0].split('_')[-1]
-            operator = op_file_split[1].split('_')[0]
-            operators[operator] = float(row['Two'])
-            e_parent = float(row['Energy ket'])
+            op_file_split = row["op_file"].split(split_string)
+            sample = op_file_split[0].split("_")[-1]
+            operator = op_file_split[1].split("_")[0]
+            operators[operator] = float(row["Two"])
+            e_parent = float(row["Energy ket"])
         ret_df[list(operators.keys())] = pd.DataFrame(operators, index=[0])
-        ret_df['sample'] = int(sample)
-        ret_df['E_parent'] = float(e_parent)
-        ret_df['E_daughter'] = float(name)
+        ret_df["sample"] = int(sample)
+        ret_df["E_parent"] = float(e_parent)
+        ret_df["E_daughter"] = float(name)
         final_df = final_df.append(ret_df)
-    final_df = final_df.set_index('sample').sort_index(ascending=True)
+    final_df = final_df.set_index("sample").sort_index(ascending=True)
     return final_df
 
 
@@ -41,7 +45,7 @@ tasks = {
     "2": ["M0nu_EMAX_6", "GT_EMAX_6", "F_EMAX_6", "T_EMAX_6"],
     "1": ["M0nu_EMAX_4", "GT_EMAX_4", "F_EMAX_4", "T_EMAX_4"],
     # "1": ["M0nu", "GT", "F", "T"],
-    "0": ["M0nu_HF", "GT_HF", "F_HF", "T_HF"]
+    "0": ["M0nu_HF", "GT_HF", "F_HF", "T_HF"],
 }
 seed = 0
 preprocessor = IMSRGPreprocessor(
@@ -52,27 +56,25 @@ preprocessor = IMSRGPreprocessor(
     num_x_cols=num_x_cols,
     tasks=tasks,
     num_pca_dims=num_pca_dims,
-    seed=seed
+    seed=seed,
 )
 
 X_train, Y_train = preprocessor.get_training_data()
 X_test, Y_test = preprocessor.get_testing_data()
 
-model_name = 'DGP'
-base_model = 'VGP'
-base_kernels = ['ArcCosine', 'Linear', 'RBF', 'RBF']
-likelihood_name = 'Gaussian'
+model_name = "DGP"
+base_model = "VGP"
+base_kernels = ["ArcCosine", "Linear", "RBF", "RBF"]
+likelihood_name = "Gaussian"
 
 deep_trainer = DeepTrainer(
-    data=(X_train, Y_train),
-    optimizer_name='scipy',
-    num_outputs=num_outputs
+    data=(X_train, Y_train), optimizer_name="scipy", num_outputs=num_outputs
 )
 
 deep_trainer.construct_model(
     model_names=[base_model for i in range(max_fidelity)],
     base_kernels=base_kernels,
-    likelihood_name=likelihood_name
+    likelihood_name=likelihood_name,
 )
 
 deep_trainer.train_deep_model()
@@ -86,7 +88,7 @@ plotter = Plotter(
     Y_test=Y_test,
     Y_train=y_train_df,
     tasks=hf_tasks,
-    preprocessor=preprocessor
+    preprocessor=preprocessor,
 )
 
 train_inds, test_inds = preprocessor.get_indices()
@@ -104,7 +106,7 @@ if not os.path.isdir(path):
 plotter.plot_prediction_vs_imsrg_data(
     path_to_save=f"{path}/train_imsrg_small_fidelity_{max_fidelity}_dims_{num_pca_dims}_data_{num_train_data}_seed_{seed}_tasks_{hf_tasks}",
     min_size=-0.5,
-    max_size=4
+    max_size=4,
 )
 
 # plotter.plot_prediction_vs_imsrg_data(
